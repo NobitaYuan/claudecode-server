@@ -29,7 +29,7 @@ const c = {
 };
 
 try {
-    const envPath = path.join(__dirname, '../.env');
+    const envPath = path.join(__dirname, './.env');
     const envFile = fs.readFileSync(envPath, 'utf8');
     envFile.split('\n').forEach(line => {
         const trimmedLine = line.trim();

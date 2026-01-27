@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node index.js)",
+      "Bash(pnpm rebuild:*)",
+      "Bash(npm install)"
+    ]
+  }
+}

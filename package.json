@@ -7,7 +7,7 @@
 	"scripts": {
 		"start": "node server/index.js",
 		"build": "npx vite build",
-		"dev": "npx vite",
+		"dev": "node index.js",
 		"preview": "npx vite preview"
 	},
 	"dependencies": {
@@ -17,10 +17,11 @@
 		"@openai/codex-sdk": "^0.91.0",
 		"bcrypt": "^6.0.0",
 		"better-sqlite3": "^12.6.2",
+		"chokidar": "^5.0.0",
 		"cors": "^2.8.6",
 		"cross-spawn": "^7.0.6",
 		"crypto": "^1.0.1",
-		"express": "^5.2.1",
+		"express": "^4.22.1",
 		"gray-matter": "^4.0.3",
 		"jsonwebtoken": "^9.0.3",
 		"mime-types": "^3.0.2",
