@@ -1,0 +1,33 @@
+{
+	"name": "claude-code-web-server",
+	"version": "0.10",
+	"description": "A web-based UI for Claude Code CLI",
+	"type": "module",
+	"main": "server/index.js",
+	"scripts": {
+		"start": "node server/index.js",
+		"build": "npx vite build",
+		"dev": "npx vite",
+		"preview": "npx vite preview"
+	},
+	"dependencies": {
+		"@anthropic-ai/claude-agent-sdk": "^0.2.20",
+		"@iarna/toml": "^2.2.5",
+		"@octokit/rest": "^22.0.1",
+		"@openai/codex-sdk": "^0.91.0",
+		"bcrypt": "^6.0.0",
+		"better-sqlite3": "^12.6.2",
+		"cors": "^2.8.6",
+		"cross-spawn": "^7.0.6",
+		"crypto": "^1.0.1",
+		"express": "^5.2.1",
+		"gray-matter": "^4.0.3",
+		"jsonwebtoken": "^9.0.3",
+		"mime-types": "^3.0.2",
+		"node-fetch": "^3.3.2",
+		"node-pty": "^1.1.0",
+		"sqlite": "^5.1.1",
+		"sqlite3": "^5.1.7",
+		"ws": "^8.19.0"
+	}
+}
