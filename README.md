@@ -77,7 +77,7 @@
 
 ### 环境要求
 - Node.js >= 18
-- npm 或 pnpm
+- npm (pnpm 有些问题，建议使用 npm)
 
 ### 安装依赖
 ```bash
