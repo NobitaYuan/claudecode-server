@@ -601,6 +601,7 @@ async function queryClaudeSDK(command, options = {}, ws) {
 
       // Transform and send message to WebSocket
       const transformedMessage = transformMessage(message);
+      console.log('message', message)
       ws.send({
         type: 'claude-response',
         data: transformedMessage,
