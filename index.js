@@ -84,15 +84,15 @@ let isGetProjectsRunning = false; // Flag to prevent reentrant calls
 
 // Broadcast progress to all connected WebSocket clients
 function broadcastProgress(progress) {
-    const message = JSON.stringify({
-        type: 'loading_progress',
-        ...progress
-    });
-    connectedClients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(message);
-        }
-    });
+    // const message = JSON.stringify({
+    //     type: 'loading_progress',
+    //     ...progress
+    // });
+    // connectedClients.forEach(client => {
+    //     if (client.readyState === WebSocket.OPEN) {
+    //         client.send(message);
+    //     }
+    // });
 }
 
 // Setup file system watcher for Claude projects folder using chokidar
@@ -171,9 +171,9 @@ async function setupProjectsWatcher() {
         // Set up event listeners
         projectsWatcher
             .on('add', (filePath) => debouncedUpdate('add', filePath))
-            .on('change', (filePath) => debouncedUpdate('change', filePath))
             .on('unlink', (filePath) => debouncedUpdate('unlink', filePath))
             .on('addDir', (dirPath) => debouncedUpdate('addDir', dirPath))
+            .on('change', (filePath) => debouncedUpdate('change', filePath))
             .on('unlinkDir', (dirPath) => debouncedUpdate('unlinkDir', dirPath))
             .on('error', (error) => {
                 console.error('[ERROR] Chokidar watcher error:', error);
