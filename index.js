@@ -9,6 +9,7 @@ import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const SERVER_BASE_URL = process.env.SERVER_BASE_URL || '/ccserver'
 
 // ANSI color codes for terminal output
 const colors = {
@@ -31,6 +32,7 @@ const c = {
 };
 
 console.log('PORT from env:', process.env.PORT);
+console.log('SERVER_BASE_URL', SERVER_BASE_URL)
 
 import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -221,7 +223,6 @@ const wss = new WebSocketServer({
 
 // Make WebSocket server available to routes
 app.locals.wss = wss;
-
 app.use(cors());
 app.use(express.json({
     limit: '50mb',
@@ -236,8 +237,10 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+const ccserverRouter = express.Router();
+
 // Public health check endpoint (no authentication required)
-app.get('/health', (req, res) => {
+ccserverRouter.get('/health', (req, res) => {
     res.json({
         status: 'ok',
         timestamp: new Date().toISOString()
@@ -245,53 +248,53 @@ app.get('/health', (req, res) => {
 });
 
 // Optional API key validation (if configured)
-app.use('/api', validateApiKey);
+ccserverRouter.use('/', validateApiKey);
 
 // Authentication routes (public)
-app.use('/api/auth', authRoutes);
+ccserverRouter.use('/auth', authRoutes);
 
 // Projects API Routes (protected)
-app.use('/api/projects', authenticateToken, projectsRoutes);
+ccserverRouter.use('/projects', authenticateToken, projectsRoutes);
 
 // Git API Routes (protected)
-app.use('/api/git', authenticateToken, gitRoutes);
+ccserverRouter.use('/git', authenticateToken, gitRoutes);
 
 // MCP API Routes (protected)
-app.use('/api/mcp', authenticateToken, mcpRoutes);
+ccserverRouter.use('/mcp', authenticateToken, mcpRoutes);
 
 // Cursor API Routes (protected)
-app.use('/api/cursor', authenticateToken, cursorRoutes);
+ccserverRouter.use('/cursor', authenticateToken, cursorRoutes);
 
 // TaskMaster API Routes (protected)
-app.use('/api/taskmaster', authenticateToken, taskmasterRoutes);
+ccserverRouter.use('/taskmaster', authenticateToken, taskmasterRoutes);
 
 // MCP utilities
-app.use('/api/mcp-utils', authenticateToken, mcpUtilsRoutes);
+ccserverRouter.use('/mcp-utils', authenticateToken, mcpUtilsRoutes);
 
 // Commands API Routes (protected)
-app.use('/api/commands', authenticateToken, commandsRoutes);
+ccserverRouter.use('/commands', authenticateToken, commandsRoutes);
 
 // Settings API Routes (protected)
-app.use('/api/settings', authenticateToken, settingsRoutes);
+ccserverRouter.use('/settings', authenticateToken, settingsRoutes);
 
 // CLI Authentication API Routes (protected)
-app.use('/api/cli', authenticateToken, cliAuthRoutes);
+ccserverRouter.use('/cli', authenticateToken, cliAuthRoutes);
 
 // User API Routes (protected)
-app.use('/api/user', authenticateToken, userRoutes);
+ccserverRouter.use('/user', authenticateToken, userRoutes);
 
 // Codex API Routes (protected)
-app.use('/api/codex', authenticateToken, codexRoutes);
+ccserverRouter.use('/codex', authenticateToken, codexRoutes);
 
 // Agent API Routes (uses API key authentication)
-app.use('/api/agent', agentRoutes);
+ccserverRouter.use('/agent', agentRoutes);
 
 // Serve public files (like api-docs.html)
-app.use(express.static(path.join(__dirname, '../public')));
+ccserverRouter.use(express.static(path.join(__dirname, '../public')));
 
 // Static files served after API routes
 // Add cache control: HTML files should not be cached, but assets can be cached
-app.use(express.static(path.join(__dirname, '../dist'), {
+ccserverRouter.use(express.static(path.join(__dirname, '../dist'), {
     setHeaders: (res, filePath) => {
         if (filePath.endsWith('.html')) {
             // Prevent HTML caching to avoid service worker issues after builds
@@ -306,11 +309,11 @@ app.use(express.static(path.join(__dirname, '../dist'), {
 }));
 
 // API Routes (protected)
-// /api/config endpoint removed - no longer needed
+// /config endpoint removed - no longer needed
 // Frontend now uses window.location for WebSocket URLs
 
 // System update endpoint
-app.post('/api/system/update', authenticateToken, async (req, res) => {
+ccserverRouter.post('/system/update', authenticateToken, async (req, res) => {
     try {
         // Get the project root directory (parent of server directory)
         const projectRoot = path.join(__dirname, '..');
@@ -374,7 +377,7 @@ app.post('/api/system/update', authenticateToken, async (req, res) => {
     }
 });
 
-app.get('/api/projects', authenticateToken, async (req, res) => {
+ccserverRouter.get('/projects', authenticateToken, async (req, res) => {
     try {
         const projects = await getProjects(broadcastProgress);
         res.json(projects);
@@ -383,7 +386,7 @@ app.get('/api/projects', authenticateToken, async (req, res) => {
     }
 });
 
-app.get('/api/projects/:projectName/sessions', authenticateToken, async (req, res) => {
+ccserverRouter.get('/projects/:projectName/sessions', authenticateToken, async (req, res) => {
     try {
         const { limit = 5, offset = 0 } = req.query;
         const result = await getSessions(req.params.projectName, parseInt(limit), parseInt(offset));
@@ -394,7 +397,7 @@ app.get('/api/projects/:projectName/sessions', authenticateToken, async (req, re
 });
 
 // Get messages for a specific session
-app.get('/api/projects/:projectName/sessions/:sessionId/messages', authenticateToken, async (req, res) => {
+ccserverRouter.get('/projects/:projectName/sessions/:sessionId/messages', authenticateToken, async (req, res) => {
     try {
         const { projectName, sessionId } = req.params;
         const { limit, offset } = req.query;
@@ -419,7 +422,7 @@ app.get('/api/projects/:projectName/sessions/:sessionId/messages', authenticateT
 });
 
 // Rename project endpoint
-app.put('/api/projects/:projectName/rename', authenticateToken, async (req, res) => {
+ccserverRouter.put('/projects/:projectName/rename', authenticateToken, async (req, res) => {
     try {
         const { displayName } = req.body;
         await renameProject(req.params.projectName, displayName);
@@ -430,7 +433,7 @@ app.put('/api/projects/:projectName/rename', authenticateToken, async (req, res)
 });
 
 // Delete session endpoint
-app.delete('/api/projects/:projectName/sessions/:sessionId', authenticateToken, async (req, res) => {
+ccserverRouter.delete('/projects/:projectName/sessions/:sessionId', authenticateToken, async (req, res) => {
     try {
         const { projectName, sessionId } = req.params;
         console.log(`[API] Deleting session: ${sessionId} from project: ${projectName}`);
@@ -444,7 +447,7 @@ app.delete('/api/projects/:projectName/sessions/:sessionId', authenticateToken, 
 });
 
 // Delete project endpoint (force=true to delete with sessions)
-app.delete('/api/projects/:projectName', authenticateToken, async (req, res) => {
+ccserverRouter.delete('/projects/:projectName', authenticateToken, async (req, res) => {
     try {
         const { projectName } = req.params;
         const force = req.query.force === 'true';
@@ -456,7 +459,7 @@ app.delete('/api/projects/:projectName', authenticateToken, async (req, res) => 
 });
 
 // Create project endpoint
-app.post('/api/projects/create', authenticateToken, async (req, res) => {
+ccserverRouter.post('/projects/create', authenticateToken, async (req, res) => {
     try {
         const { path: projectPath } = req.body;
 
@@ -484,7 +487,7 @@ const expandWorkspacePath = (inputPath) => {
 };
 
 // Browse filesystem endpoint for project suggestions - uses existing getFileTree
-app.get('/api/browse-filesystem', authenticateToken, async (req, res) => {
+ccserverRouter.get('/browse-filesystem', authenticateToken, async (req, res) => {
     try {
         const { path: dirPath } = req.query;
 
@@ -564,7 +567,7 @@ app.get('/api/browse-filesystem', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/api/create-folder', authenticateToken, async (req, res) => {
+ccserverRouter.post('/create-folder', authenticateToken, async (req, res) => {
     try {
         const { path: folderPath } = req.body;
         if (!folderPath) {
@@ -605,7 +608,7 @@ app.post('/api/create-folder', authenticateToken, async (req, res) => {
 });
 
 // Read file content endpoint
-app.get('/api/projects/:projectName/file', authenticateToken, async (req, res) => {
+ccserverRouter.get('/projects/:projectName/file', authenticateToken, async (req, res) => {
     try {
         const { projectName } = req.params;
         const { filePath } = req.query;
@@ -646,7 +649,7 @@ app.get('/api/projects/:projectName/file', authenticateToken, async (req, res) =
 });
 
 // Serve binary file content endpoint (for images, etc.)
-app.get('/api/projects/:projectName/files/content', authenticateToken, async (req, res) => {
+ccserverRouter.get('/projects/:projectName/files/content', authenticateToken, async (req, res) => {
     try {
         const { projectName } = req.params;
         const { path: filePath } = req.query;
@@ -700,7 +703,7 @@ app.get('/api/projects/:projectName/files/content', authenticateToken, async (re
 });
 
 // Save file content endpoint
-app.put('/api/projects/:projectName/file', authenticateToken, async (req, res) => {
+ccserverRouter.put('/projects/:projectName/file', authenticateToken, async (req, res) => {
     try {
         const { projectName } = req.params;
         const { filePath, content } = req.body;
@@ -750,7 +753,7 @@ app.put('/api/projects/:projectName/file', authenticateToken, async (req, res) =
     }
 });
 
-app.get('/api/projects/:projectName/files', authenticateToken, async (req, res) => {
+ccserverRouter.get('/projects/:projectName/files', authenticateToken, async (req, res) => {
     try {
 
         // Using fsPromises from import
@@ -790,9 +793,9 @@ wss.on('connection', (ws, request) => {
     const urlObj = new URL(url, 'http://localhost');
     const pathname = urlObj.pathname;
 
-    if (pathname === '/shell') {
+    if (pathname === SERVER_BASE_URL + '/shell') {
         handleShellConnection(ws);
-    } else if (pathname === '/ws') {
+    } else if (pathname === SERVER_BASE_URL + '/ws') {
         handleChatConnection(ws);
     } else {
         console.log('[WARN] Unknown WebSocket path:', pathname);
@@ -1271,7 +1274,7 @@ function handleShellConnection(ws) {
     });
 }
 // Audio transcription endpoint
-app.post('/api/transcribe', authenticateToken, async (req, res) => {
+ccserverRouter.post('/transcribe', authenticateToken, async (req, res) => {
     try {
         const multer = (await import('multer')).default;
         const upload = multer({ storage: multer.memoryStorage() });
@@ -1420,7 +1423,7 @@ Agent instructions:`;
 });
 
 // Image upload endpoint
-app.post('/api/projects/:projectName/upload-images', authenticateToken, async (req, res) => {
+ccserverRouter.post('/projects/:projectName/upload-images', authenticateToken, async (req, res) => {
     try {
         const multer = (await import('multer')).default;
         const path = (await import('path')).default;
@@ -1505,7 +1508,7 @@ app.post('/api/projects/:projectName/upload-images', authenticateToken, async (r
 });
 
 // Get token usage for a specific session
-app.get('/api/projects/:projectName/sessions/:sessionId/token-usage', authenticateToken, async (req, res) => {
+ccserverRouter.get('/projects/:projectName/sessions/:sessionId/token-usage', authenticateToken, async (req, res) => {
     try {
         const { projectName, sessionId } = req.params;
         const { provider = 'claude' } = req.query;
@@ -1682,28 +1685,28 @@ app.get('/api/projects/:projectName/sessions/:sessionId/token-usage', authentica
 });
 
 // Serve React app for all other routes (excluding static files)
-app.get('*', (req, res) => {
-    // Skip requests for static assets (files with extensions)
-    if (path.extname(req.path)) {
-        return res.status(404).send('Not found');
-    }
+// app.get('*', (req, res) => {
+//     // Skip requests for static assets (files with extensions)
+//     if (path.extname(req.path)) {
+//         return res.status(404).send('Not found');
+//     }
 
-    // Only serve index.html for HTML routes, not for static assets
-    // Static assets should already be handled by express.static middleware above
-    const indexPath = path.join(__dirname, '../dist/index.html');
+//     // Only serve index.html for HTML routes, not for static assets
+//     // Static assets should already be handled by express.static middleware above
+//     const indexPath = path.join(__dirname, '../dist/index.html');
 
-    // Check if dist/index.html exists (production build available)
-    if (fs.existsSync(indexPath)) {
-        // Set no-cache headers for HTML to prevent service worker issues
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-        res.sendFile(indexPath);
-    } else {
-        // In development, redirect to Vite dev server only if dist doesn't exist
-        res.redirect(`http://localhost:${process.env.VITE_PORT || 5173}`);
-    }
-});
+//     // Check if dist/index.html exists (production build available)
+//     if (fs.existsSync(indexPath)) {
+//         // Set no-cache headers for HTML to prevent service worker issues
+//         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+//         res.setHeader('Pragma', 'no-cache');
+//         res.setHeader('Expires', '0');
+//         res.sendFile(indexPath);
+//     } else {
+//         // In development, redirect to Vite dev server only if dist doesn't exist
+//         res.redirect(`http://localhost:${process.env.VITE_PORT || 5173}`);
+//     }
+// });
 
 // Helper function to convert permissions to rwx format
 function permToRwx(perm) {
@@ -1790,6 +1793,7 @@ async function getFileTree(dirPath, maxDepth = 3, currentDepth = 0, showHidden =
 }
 
 const PORT = process.env.PORT || 3001;
+app.use(SERVER_BASE_URL, ccserverRouter)
 
 // Initialize database and start server
 async function startServer() {
