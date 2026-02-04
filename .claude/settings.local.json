@@ -3,7 +3,8 @@
     "allow": [
       "Bash(node index.js)",
       "Bash(pnpm rebuild:*)",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(curl:*)"
     ]
   }
 }

@@ -440,7 +440,7 @@ async function getProjects(progressCallback = null) {
         
         // Try to get sessions for this project (just first 5 for performance)
         try {
-          const sessionResult = await getSessions(entry.name, 5, 0);
+          const sessionResult = await getSessions(entry.name, null, 0);
           project.sessions = sessionResult.sessions || [];
           project.sessionMeta = {
             hasMore: sessionResult.hasMore,
@@ -632,9 +632,9 @@ async function getSessions(projectName, limit = 5, offset = 0) {
       });
       
       allEntries.push(...result.entries);
-      
-      // Early exit optimization for large projects
-      if (allSessions.size >= (limit + offset) * 2 && allEntries.length >= Math.min(3, filesWithStats.length)) {
+
+      // Early exit optimization for large projects (skip if limit is null or 0)
+      if (limit && allSessions.size >= (limit + offset) * 2 && allEntries.length >= Math.min(3, filesWithStats.length)) {
         break;
       }
     }
@@ -705,9 +705,21 @@ async function getSessions(projectName, limit = 5, offset = 0) {
       .sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity));
 
     const total = visibleSessions.length;
+
+    // If limit is null or 0, return all sessions (no pagination)
+    if (!limit) {
+      return {
+        sessions: visibleSessions.slice(offset),
+        hasMore: false,
+        total,
+        offset,
+        limit
+      };
+    }
+
     const paginatedSessions = visibleSessions.slice(offset, offset + limit);
     const hasMore = offset + limit < total;
-    
+
     return {
       sessions: paginatedSessions,
       hasMore,
