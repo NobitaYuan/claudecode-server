@@ -23,6 +23,7 @@ const validateApiKey = (req, res, next) => {
 const authenticateToken = async (req, res, next) => {
   // Platform mode:  use single database user
   if (IS_PLATFORM) {
+    return next();
     try {
       const user = userDb.getFirstUser();
       if (!user) {
