@@ -1138,6 +1138,7 @@ function handleShellConnection(ws) {
                     shellProcess.onData((data) => {
                         const session = ptySessionsMap.get(ptySessionKey);
                         if (!session) return;
+                        // console.log('shellProcess', data)
 
                         if (session.buffer.length < 5000) {
                             session.buffer.push(data);
@@ -1217,6 +1218,7 @@ function handleShellConnection(ws) {
 
             } else if (data.type === 'input') {
                 // Send input to shell process
+                // console.log('shellProcess', shellProcess)
                 if (shellProcess && shellProcess.write) {
                     try {
                         shellProcess.write(data.data);
