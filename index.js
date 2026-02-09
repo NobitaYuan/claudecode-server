@@ -896,7 +896,7 @@ function handleChatConnection(ws) {
                 // introduced so the SDK can resume once the user clicks Allow/Deny.
                 if (data.requestId) {
                     resolveToolApproval(data.requestId, {
-                        allow: Boolean(data.allow),
+                        allow: data.allow,
                         updatedInput: data.updatedInput,
                         message: data.message,
                         rememberEntry: data.rememberEntry
