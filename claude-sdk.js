@@ -594,12 +594,12 @@ async function queryClaudeSDK(command, options = {}, ws) {
 
       // 如果没有收到决策（超时），拒绝工具调用
       if (!decision) {
-        return { behavior: 'deny', message: 'Permission request timed out' };
+        return { behavior: 'deny', message: '权限请求超时' };
       }
 
       // 如果用户取消了请求，拒绝工具调用
       if (decision.cancelled) {
-        return { behavior: 'deny', message: 'Permission request cancelled' };
+        return { behavior: 'deny', message: '会话已取消' };
       }
 
       // 如果用户允许了工具调用
@@ -621,7 +621,7 @@ async function queryClaudeSDK(command, options = {}, ws) {
       }
 
       // 用户拒绝工具调用
-      return { behavior: 'deny', message: decision.message ?? 'User denied tool use' };
+      return { behavior: 'deny', interrupt: true, message: decision.message ?? '用户拒绝工具调用' };
     };
 
     // 步骤 5: 创建 SDK 查询实例
